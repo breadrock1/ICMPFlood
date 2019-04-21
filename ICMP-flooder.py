@@ -32,7 +32,7 @@ class Flooder():
         for i in range(0, 6):
             packet = self.construct_packet(length, freq)
             sock.sendto(packet, (ip, port))
-            sock.settimeout(freq)
+            time.sleep(freq * 10)
 
         # This loop is for sending packet to target infinitely
         #while(True):
