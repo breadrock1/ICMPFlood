@@ -1,13 +1,9 @@
 import sys
-import os
 import time
-import threading
 import string
 import struct
 import socket
-import random
 import argparse
-import re
 
 class Flooder:
     # Check data, calculated from the ICMP header and data
