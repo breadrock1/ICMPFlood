@@ -49,6 +49,12 @@ class Flooder:
         parser.add_argument('-t', help='Count thread', metavar='', default=1, type=int)
         args = parser.parse_args()
 
+        print("   ___ _                 _           \n" +
+                "  / __\ | ___   ___   __| | ___ _ __ \n" +
+                " / _\ | |/ _ \ / _ \ / _` |/ _ \ '__|\n" +
+                "/ /   | | (_) | (_) | (_| |  __/ |   \n" +
+                "\/    |_|\___/ \___/ \__,_|\___|_|   \n")
+
         # Try to get ip address of destination (by url too)
         if args.u:
             url = args.u
@@ -95,7 +101,7 @@ class Flooder:
             print('\t Stop open threads ...\n')
             for thrd in threads:
                 thrd._stop()
-            print('\t Attack has been stopped!\n')
+            print('\t Attack has been stopped!!!\n')
 
 if __name__ == "__main__":
     flood = Flooder()
