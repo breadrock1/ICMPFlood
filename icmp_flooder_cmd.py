@@ -1,3 +1,5 @@
+# FIX: can`t close opened threads
+
 import sys
 import time
 import string
