@@ -13,17 +13,17 @@ class Window(QWidget):
         self.initGUI()
 
     def initGUI(self):
-        lbl1 = QLabel('Flooding', self)
+        labelFlood = QLabel('Flooding', self)
 
-        btn1 = QPushButton('Close', self)
-        btn1.clicked.connect(self.close)
+        buttonClose = QPushButton('Close', self)
+        buttonClose.clicked.connect(self.close)
 
-        grid = QGridLayout()
-        grid.setSpacing(1)
+        gridLayout = QGridLayout()
+        gridLayout.setSpacing(1)
 
-        grid.addWidget(lbl1, 1, 0)
-        grid.addWidget(btn1, 2, 1)
+        gridLayout.addWidget(labelFlood, 1, 0)
+        gridLayout.addWidget(buttonClose, 2, 1)
 
-        self.setLayout(grid)
+        self.setLayout(gridLayout)
         self.setGeometry(600, 470, 600, 400)
         self.show()
