@@ -89,7 +89,13 @@ def main():
         exit(app.exec_())
 
     elif mode == "cmd":
-        Flooder(arguments.i, arguments.p, arguments.l, arguments.f, arguments.t)
+        flooder = Flooder(threads=arguments.t)
+        flooder.run_flooding(
+            ip=arguments.i,
+            port=arguments.p,
+            length=arguments.l,
+            frequency=arguments.f
+        )
 
     else:
         error(msg='The mode hasn\'t been specified!')
