@@ -1,13 +1,15 @@
-from sys import exit, argv
-
+from sys import argv
+from logging import info, error
 from argparse import ArgumentParser
+
 from PyQt5.QtWidgets import QApplication
 
 from src.flooder import Flooder
+from src.gui.MainWindow import MainWindow
 
 
 def log_print() -> None:
-    print(
+    info(msg=
             "   ___ _                 _           \n" +
             "  / __\ | ___   ___   __| | ___ _ __ \n" +
             " / _\ | |/ _ \ / _ \ / _` |/ _ \ '__|\n" +
@@ -32,12 +34,11 @@ def main():
         allow_abbrev=True
     )
 
-    mode = ''
+    subArgumentParser = argumentParser.add_subparsers(title='Script Modes', dest='mode', required=True)
 
-    subArgumentParser = argumentParser.add_subparsers(title='Script Modes', dest=mode)
     subArgumentParser.add_parser('gui', help='launch with GUI')
-
     cmd = subArgumentParser.add_parser('cmd', help='launch from terminal')
+
     cmd.add_argument(
             '-i', metavar='--ip-address',
             help='Target ip address',
@@ -81,13 +82,17 @@ def main():
 
     arguments = argumentParser.parse_args()
 
-    if mode is "gui":
+    mode = arguments.mode
+    if mode == "gui":
         app = QApplication(argv)
         MainWindow()
         exit(app.exec_())
 
-    else:
+    elif mode == "cmd":
         Flooder(arguments.i, arguments.p, arguments.l, arguments.f, arguments.t)
+
+    else:
+        error(msg='The mode hasn\'t been specified!')
 
 
 if __name__ == "__main__":
