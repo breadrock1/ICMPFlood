@@ -1,4 +1,4 @@
-from sys import argv
+from sys import argv, exit
 from logging import info, error
 from argparse import ArgumentParser
 
@@ -85,7 +85,8 @@ def main():
     mode = arguments.mode
     if mode == "gui":
         app = QApplication(argv)
-        MainWindow()
+        window = MainWindow()
+        window.show()
         exit(app.exec_())
 
     elif mode == "cmd":
