@@ -4,8 +4,8 @@ from argparse import ArgumentParser
 
 from PyQt5.QtWidgets import QApplication
 
-from src.flooder import Flooder
-from src.gui.MainWindow import MainWindow
+from src.gui.main_window import MainWindow
+from src.flooder_runner import FlooderConsoleRunner
 
 
 def log_print() -> None:
@@ -90,16 +90,19 @@ def main():
         exit(app.exec_())
 
     elif mode == "cmd":
-        flooder = Flooder(threads=arguments.t)
-        flooder.run_flooding(
-            ip=arguments.i,
-            port=arguments.p,
-            length=arguments.l,
-            frequency=arguments.f
+        flooderConsoleRunner = FlooderConsoleRunner(
+            threads_number=arguments.t,
+            arguments={
+                'ip': arguments.i,
+                'port': arguments.p,
+                'length': arguments.l,
+                'frequency': arguments.f
+            }
         )
+        flooderConsoleRunner.run()
 
     else:
-        error(msg='The mode hasn\'t been specified!')
+        error(msg='The mode has not been specified!')
 
 
 if __name__ == "__main__":
