@@ -54,10 +54,10 @@ class FloodingWindow(QWidget):
     def __build_flooder_thread(self):
         self.thread = QThread()
         self.flooder = Flooder(
-            ip=self.address,
-            port=self.port,
-            length=self.length,
-            frequency=self.frequency
+            address=self.address,
+            port_number=self.port,
+            packet_length=self.length,
+            sending_frequency=self.frequency
         )
 
         self.flooder.moveToThread(self.thread)

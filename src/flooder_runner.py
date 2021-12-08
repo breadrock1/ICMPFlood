@@ -14,10 +14,10 @@ class FlooderConsoleRunner(Thread):
 
         self.all_threads = list()
         self.flooder = Flooder(
-            ip=self.args.get('ip'),
-            port=self.args.get('port'),
-            length=self.args.get('length'),
-            frequency=self.args.get('frequency')
+            address=self.args.get('ip'),
+            port_number=self.args.get('port'),
+            packet_length=self.args.get('length'),
+            sending_frequency=self.args.get('frequency')
         )
 
     def run(self) -> None:
