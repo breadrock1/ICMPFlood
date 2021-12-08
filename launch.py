@@ -9,12 +9,12 @@ from src.gui.MainWindow import MainWindow
 
 
 def log_print() -> None:
-    info(msg=
-            "   ___ _                 _           \n" +
-            "  / __\ | ___   ___   __| | ___ _ __ \n" +
-            " / _\ | |/ _ \ / _ \ / _` |/ _ \ '__|\n" +
-            "/ /   | | (_) | (_) | (_| |  __/ |   \n" +
-            "\/    |_|\___/ \___/ \__,_|\___|_|   \n"
+    info(
+        msg="   ___ _                 _           \n"
+            + "  / __\ | ___   ___   __| | ___ _ __ \n"
+            + " / _\ | |/ _ \ / _ \ / _` |/ _ \ '__|\n"
+            + "/ /   | | (_) | (_) | (_| |  __/ |   \n"
+            + "\/    |_|\___/ \___/ \__,_|\___|_|   \n"
     )
 
 
@@ -40,44 +40,45 @@ def main():
     cmd = subArgumentParser.add_parser('cmd', help='launch from terminal')
 
     cmd.add_argument(
-            '-i', metavar='--ip-address',
-            help='Target ip address',
-            required=True,
-            type=str
+        '-i', metavar='--ip-address',
+        help='Target ip address',
+        required=True,
+        type=str
     )
     cmd.add_argument(
-            '-u', metavar='--url-address',
-            help='Target url address',
-            required=False, type=str
+        '-u', metavar='--url-address',
+        help='Target url address',
+        required=False,
+        type=str
     )
     cmd.add_argument(
-            '-p', metavar='--port-number',
-            help='Target address port number',
-            required=False,
-            choices=range(0,65536),
-            default=80,
-            type=int
+        '-p', metavar='--port-number',
+        help='Target address port number',
+        required=False,
+        choices=range(0, 65536),
+        default=80,
+        type=int
     )
     cmd.add_argument(
-            '-t', metavar='--threads',
-            help='Number of threads',
-            required=False,
-            default=1,
-            type=int
+        '-t', metavar='--threads',
+        help='Number of threads',
+        required=False,
+        default=1,
+        type=int
     )
     cmd.add_argument(
-            '-l', metavar='--packet-length',
-            help='Packet length',
-            required=False,
-            default=60,
-            type=int
+        '-l', metavar='--packet-length',
+        help='Packet length',
+        required=False,
+        default=60,
+        type=int
     )
     cmd.add_argument(
-            '-f', metavar='--packet-freq',
-            help='Value of frequents',
-            required=False,
-            default=0.1,
-            type=float
+        '-f', metavar='--packet-freq',
+        help='Value of frequents',
+        required=False,
+        default=0.1,
+        type=float
     )
 
     arguments = argumentParser.parse_args()
