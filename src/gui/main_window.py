@@ -10,6 +10,19 @@ from src.gui.flooding_window import FloodingWindow
 
 
 class MainWindow(QWidget):
+    """
+    This class extends PyQt5.QtWidgets.QWidget class which provides ability to build
+    and show GUI window. This class build main window which provides ability to enter
+    unnecessary data to run flooding.
+
+    :argument:
+        parent:
+            The parent object (default = None).
+
+    :attributes:
+        all_threads (List):
+            This container stored all running flooding threads.
+    """
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -20,6 +33,14 @@ class MainWindow(QWidget):
         self.setGeometry(600, 470, 600, 400)
 
     def _buildGUI(self) -> QGridLayout:
+        """
+        This method creates, configures and returns QGridLayout object with
+        replaced into GUI elements.
+
+        :return:
+            QGridLayout object.
+        """
+
         self.setWindowTitle('ICMP Packet')
 
         labelAddress = QLabel('IP-address: ', self)
@@ -61,9 +82,17 @@ class MainWindow(QWidget):
         return gridLayout
 
     def __close(self):
+        """
+        This method just close current QWidget object.
+        """
+
         self.close()
 
     def __sendTo(self):
+        """
+        This method initializes the flooding window to run flooding.
+        """
+
         address = str(self.editAddress.text())
         port_number = int(self.exitPortNum.text())
         num_threads = int(self.editThreads.text())
