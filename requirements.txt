@@ -1,4 +1,6 @@
 argparse~=1.4.0
+conda~=4.3.16
+pylint~=2.12.2
 PyQt5~=5.15.6
 PyQt5-Qt5~=5.15.2
 PyQt5-sip~=12.9.0
