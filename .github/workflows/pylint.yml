@@ -21,4 +21,4 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint --rcfile=.pylintrc --output=pylit.log $(find $PWD/src -name "*.py" | xargs)
+        pylint --rcfile=.pylintrc --output=pylit.log $(find . -name "*.py" | xargs)
