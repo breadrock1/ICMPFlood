@@ -1,5 +1,6 @@
+from logging import warning, exception
+from struct import pack, error as PackException
 from time import time, sleep
-from struct import pack, error
 
 from socket import (
     socket,
@@ -9,7 +10,6 @@ from socket import (
     SOCK_RAW,
     IPPROTO_ICMP
 )
-from logging import warning, exception
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QThread
@@ -73,8 +73,8 @@ class Flooder(QThread):
         """
 
         summary = 0
-        for i in range(0, len(message), 2):
-            w = message[i] + (message[i + 1] << 8)
+        for index in range(0, len(message), 2):
+            w = message[index] + (message[index + 1] << 8)
             summary = ((summary + w) & 0xffff) + ((summary + w) >> 16)
         return htons(~summary & 0xffff)
 
@@ -87,12 +87,12 @@ class Flooder(QThread):
         """
 
         header = pack("bbHHh", 8, 0, 0, 1, 1)
-        data = (self.packet_length - 50) * 'Q'
-        data = pack("d", time()) + data.encode('ascii')
+        data_fmt = (self.packet_length - 50) * 'Q'
+        data = pack("d", time()) + data_fmt.encode('ascii')
         header = pack("bbHHh", 8, 0, htons(self._checksum(header + data)), 1, 1)
         return header + data
 
-    def run(self) -> None:
+    def run(self):
         """
         This method runs with another thread to create ICMP-packet and send it
         to specified target ip-address.
@@ -115,12 +115,11 @@ class Flooder(QThread):
                 sleep(self.sending_frequency)
                 sock.close()
 
-        except error as e:
-            exception(msg=f'Error while pack: {e}')
+        except PackException as err:
+            exception(msg=f'Failed while trying pack msg: {err}')
 
-        except (KeyboardInterrupt, SystemExit) as e:
-            warning(msg=f'Has been interrupted closing event. Closing all available threads: {e}')
-            return
+        except (KeyboardInterrupt, SystemExit) as err:
+            warning(msg=f'Has been interrupted closing event. Closing all available threads: {err}')
 
         finally:
             self.finish_signal.emit()
