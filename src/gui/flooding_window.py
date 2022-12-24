@@ -99,8 +99,7 @@ class FloodingWindow(QWidget):
         There is wrapper method to code simplistic.
         """
 
-        [self.__build_flooder_thread()\
-            for number in range(0, self.num_threads)]
+        [self.__build_flooder_thread() for _ in range(0, self.num_threads)]
 
     def __build_flooder_thread(self) -> None:
         """
