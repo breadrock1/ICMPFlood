@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QPushButton
 )
 
-from src.flooder import Flooder
+from icmpflood.flooder import Flooder
 
 
 class FloodingWindow(QWidget):

@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from threading import Thread, Event
 
-from src.flooder import Flooder
+from icmpflood.flooder import Flooder
 
 
 class FlooderConsoleRunner(Thread):

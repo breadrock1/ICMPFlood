@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QLineEdit
 )
 
-from src.gui.flooding_window import FloodingWindow
+from icmpflood.gui.flooding_window import FloodingWindow
 
 
 class MainWindow(QWidget):
