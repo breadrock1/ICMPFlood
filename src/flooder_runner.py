@@ -40,7 +40,7 @@ class FlooderConsoleRunner(Thread):
             sending_frequency=self.args.get('frequency')
         )
 
-    def run(self) -> None:
+    def run(self):
         """
         This method runs with another thread to create ICMP-packet and send it
         to specified target ip-address.
