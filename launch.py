@@ -4,8 +4,8 @@ from sys import argv, exit
 
 from PyQt5.QtWidgets import QApplication
 
-from src.gui.main_window import MainWindow
-from src.flooder_runner import FlooderConsoleRunner
+from icmpflood.gui.main_window import MainWindow
+from icmpflood.flooder_runner import FlooderConsoleRunner
 
 
 def log_print():
