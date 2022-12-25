@@ -77,10 +77,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip && \
-          pip install -r requirements.txt
+          pip install -r requirements.txt && \
+          pip install pdoc3
 
       - name: Pydoc generation
         run: |
-          /bin/pydoc3 -w $(find src/ -name '*.py' ! -name '__init__.py') && \
-          /bin/mkdir -p docs docs/classes && \
-          /bin/mv *.html docs/classes
+          pdoc3 --force --html --output-dir docs icmpflood 
