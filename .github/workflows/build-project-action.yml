@@ -29,7 +29,7 @@ jobs:
           pip install flake8
 
       - name: Code style checker
-        run: flake8 src/ --config .flake8 --show-source --statistics
+        run: flake8 icmpflood/ --config .flake8 --show-source --statistics
 
   pylint:
     name: Pylint
@@ -57,7 +57,7 @@ jobs:
 
       - name: Analysing the code with pylint
         run: |
-          pylint --rcfile=pylintrc.cfg --output=pylint.log $(find $PWD/src -name "*.py" | xargs)
+          pylint --rcfile=pylintrc.cfg --output=pylint.log $(find $PWD/icmpflood -name "*.py" | xargs)
 
   pydoc:
     name: Pydoc
