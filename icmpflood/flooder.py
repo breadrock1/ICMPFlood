@@ -20,35 +20,20 @@ class Flooder(QThread):
     This class extends PyQt5.QtCore.QThread class which provides ability to launch
     run( method ) into own thread. This class build ICMP packet (header + body)
     and send to specified address:port.
-
-    :argument:
-        address (str):
-            The target ip-address to send ICMP-packets.
-        port_number (int):
-            The target port number to send ICMP-packets.
-        packet_length (int):
-            The length of ICMP-packet body to send.
-        sending_frequency (float):
-            The frequency of ICMP-packet sending which provides to set timeout.
-
-    :attributes:
-        address (str):
-            The target ip-address to send ICMP-packets.
-        port_number (int):
-            The target port number to send ICMP-packets.
-        packet_length (int):
-            The length of ICMP-packet body to send.
-        sending_frequency (float):
-            The frequency of ICMP-packet sending which provides to set timeout.
-
-    :methods:
-        _checksum(message) -> int:
-            This static private method returns a sum of built ICMP-packet to check.
-        _construct_packet(self):
-            This method returns built ICMP-packet (header + body) to send it.
-        def run(self) -> None:
-            This method
     """
+
+    address: str
+    """The target ip-address to send ICMP-packets."""
+
+    port_number: int
+    """The target port number to send ICMP-packets."""
+
+    packet_length: int
+    """The length of ICMP-packet body to send."""
+
+    sending_frequency: float
+    """The frequency of ICMP-packet sending which provides to set timeout."""
+
     finish_signal = QtCore.pyqtSignal()
 
     def __init__(self, address: str, port_number: int, packet_length: int, sending_frequency: float):
@@ -64,12 +49,12 @@ class Flooder(QThread):
         """
         This method returns the summary byte length of built ICMP-packet.
 
-        :argument:
-            message (bytes):
-                The byte array of ICMP-packet (header + body).
+        Args:
+        message (bytes): The byte array of ICMP-packet (header + body).
 
-        :returns:
-            int: The summary byte length.
+        Returns:
+        int: The summary byte length.
+
         """
 
         summary = 0
@@ -82,8 +67,9 @@ class Flooder(QThread):
         """
         This method returns bytes of IMCP-packet (header + body).
 
-        :return:
-            bytes: The summary bytes of ICMP-packet.
+        Returns:
+        bytes: The summary bytes of ICMP-packet.
+
         """
 
         header = pack("bbHHh", 8, 0, 0, 1, 1)
@@ -97,12 +83,11 @@ class Flooder(QThread):
         This method runs with another thread to create ICMP-packet and send it
         to specified target ip-address.
 
-        :raise:
-            error:
-                throws while invoke pack() method failed.
-            KeyboardInterrupt:
-                throws while user send SIGKILL or SIGINT signal to stop
-                all threads whose sending packets.
+        Raise:
+        PackException: throws while invoke pack() method failed.
+        KeyboardInterrupt: throws while user send SIGKILL or SIGINT signal
+            to stop all threads whose sending packets.
+
         """
 
         try:

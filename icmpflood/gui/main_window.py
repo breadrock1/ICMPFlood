@@ -1,3 +1,4 @@
+from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import (
     QLabel,
     QGridLayout,
@@ -14,15 +15,10 @@ class MainWindow(QWidget):
     This class extends PyQt5.QtWidgets.QWidget class which provides ability to build
     and show GUI window. This class build main window which provides ability to enter
     unnecessary data to run flooding.
-
-    :argument:
-        parent:
-            The parent object (default = None).
-
-    :attributes:
-        all_threads (List):
-            This container stored all running flooding threads.
     """
+
+    parent: QObject
+    """The parent object (default=None)."""
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -37,7 +33,7 @@ class MainWindow(QWidget):
         This method creates, configures and returns QGridLayout object with
         replaced into GUI elements.
 
-        :return:
+        Returns:
             QGridLayout object.
         """
 
@@ -56,10 +52,10 @@ class MainWindow(QWidget):
         self.editThreads = QLineEdit(self)
 
         buttonSend = QPushButton('Send packet', self)
-        buttonSend.clicked.connect(self.__sendTo)
+        buttonSend.clicked.connect(self._sendTo)
 
         buttonClose = QPushButton('Close', self)
-        buttonClose.clicked.connect(self.__close)
+        buttonClose.clicked.connect(self._close)
 
         gridLayout = QGridLayout()
         gridLayout.setSpacing(1)
@@ -81,14 +77,14 @@ class MainWindow(QWidget):
 
         return gridLayout
 
-    def __close(self):
+    def _close(self):
         """
         This method just close current QWidget object.
         """
 
         self.close()
 
-    def __sendTo(self):
+    def _sendTo(self):
         """
         This method initializes the flooding window to run flooding.
         """

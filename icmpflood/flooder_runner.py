@@ -8,23 +8,15 @@ class FlooderConsoleRunner(Thread):
     """
     This class extends threading.Thread class which provides ability to run
     any class with another thread. This class runs flooding with another threads.
-
-    :argument:
-        threads_number (int):
-            The amount of threads to flood.
-        arguments (Dict[str, Any]):
-            The arguments which user has been entered to flood.
-
-    :attributes:
-        args (Dict[str, Any]):
-            The arguments which user has been entered to flood.
-        threads_num (int):
-            The amount of threads to flood.
-        all_threads (List):
-            This container stored all running flooding threads.
-        flooder (Flooder):
-            The Flooder class which provides ability to build and send ICMP-packets
     """
+
+    threads_number: int
+    """The amount of threads to flood."""
+
+    arguments: Dict[str, Any]
+    """The arguments which user has been entered to flood."""
+
+
 
     def __init__(self, threads_number: int, arguments: Dict[str, Any]):
         Thread.__init__(self)
