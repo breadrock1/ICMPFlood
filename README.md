@@ -1,7 +1,6 @@
 # ICMP-flooder
 
 ![GitHub version](https://img.shields.io/badge/version-v1.2.0-green?style=plastic&labelColor=dark)
-
 [![Building Project](https://github.com/breadrock1/ICMPFlood/actions/workflows/build-project-action.yml/badge.svg?branch=master)](https://github.com/breadrock1/ICMPFlood/actions/workflows/build-project-action.yml)
 
 There is simple python script that i had been implemented while studying at the University.
