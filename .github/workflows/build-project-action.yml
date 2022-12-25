@@ -27,7 +27,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install flake8
-
       - name: Code style checker
         run: flake8 icmpflood/ --config .flake8 --show-source --statistics
 
@@ -54,11 +53,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pylint
-
       - name: Analysing the code with pylint
         run: |
           pylint --rcfile=pylintrc.cfg --output=pylint.log $(find $PWD/icmpflood -name "*.py" | xargs)
-
   pydoc:
     name: Pydoc
     runs-on: ubuntu-latest
@@ -82,7 +79,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pdoc3
-
       - name: Pydoc generation
         run: |
           pdoc3 --force --html --output-dir docs icmpflood
