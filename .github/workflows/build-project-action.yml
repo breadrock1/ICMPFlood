@@ -85,4 +85,4 @@ jobs:
 
       - name: Pydoc generation
         run: |
-          pdoc3 --force --html --output-dir docs icmpflood 
+          pdoc3 --force --html --output-dir docs src
