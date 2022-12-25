@@ -56,6 +56,10 @@ jobs:
       - name: Analysing the code with pylint
         run: |
           pylint --rcfile=pylintrc.cfg --output=pylint.log $(find $PWD/icmpflood -name "*.py" | xargs)
+<<<<<<< HEAD
+=======
+
+>>>>>>> Updated workflow file
   pydoc:
     name: Pydoc
     runs-on: ubuntu-latest
