@@ -16,8 +16,6 @@ class FlooderConsoleRunner(Thread):
     arguments: Dict[str, Any]
     """The arguments which user has been entered to flood."""
 
-
-
     def __init__(self, threads_number: int, arguments: Dict[str, Any]):
         Thread.__init__(self)
 
