@@ -1,7 +1,7 @@
 from typing import Dict, Any
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, QObject
 from PyQt5.QtWidgets import (
     QLabel,
     QWidget,
@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QPushButton
 )
 
-from src.flooder import Flooder
+from icmpflood.flooder import Flooder
 
 
 class FloodingWindow(QWidget):
@@ -17,27 +17,13 @@ class FloodingWindow(QWidget):
     This class extends PyQt5.QtWidgets.QWidget class which provides ability to build
     and show GUI window. This class build window which contains information about
     running flooding process.
-
-    :argument:
-        args (Dict[str, Any]):
-            The arguments which user has been entered to flood.
-        parent:
-            The parent object (default = None).
-
-    :attributes:
-        all_threads (List):
-            This container stored all running flooding threads.
-        address (AnyStr):
-            The target ip-address.
-        port (int):
-            The target port number.
-        length (int):
-            The length to build ICMP-packet.
-        frequency (float):
-            The frequency to send ICMP-packets.
-        num_threads (int):
-            The amount of threads to flood.
     """
+
+    args: Dict[str, Any]
+    """The arguments which user has been entered to flood."""
+
+    parent: QObject
+    """The parent object (default = None)."""
 
     def __init__(self, args: Dict[str, Any], parent=None):
         QWidget.__init__(self, parent)
@@ -58,7 +44,7 @@ class FloodingWindow(QWidget):
         This method creates, configures and returns QGridLayout object with
         replaced into GUI elements.
 
-        :return:
+        Returns:
             QGridLayout object.
         """
 

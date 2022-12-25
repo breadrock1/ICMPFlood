@@ -27,9 +27,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install flake8
-
       - name: Code style checker
-        run: flake8 src/ --config .flake8 --show-source --statistics
+        run: flake8 icmpflood/ --config .flake8 --show-source --statistics
 
   pylint:
     name: Pylint
@@ -40,10 +39,10 @@ jobs:
     strategy:
       matrix:
         python-version: [ "3.9" ]
-    
+
     steps:
       - uses: actions/checkout@v2
-    
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -54,10 +53,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pylint
-    
       - name: Analysing the code with pylint
         run: |
-          pylint --rcfile=pylintrc.cfg --output=pylint.log $(find $PWD/src -name "*.py" | xargs)
+          pylint --rcfile=pylintrc.cfg --output=pylint.log $(find $PWD/icmpflood -name "*.py" | xargs)
 
   pydoc:
     name: Pydoc
@@ -76,13 +74,12 @@ jobs:
         uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ matrix.python-version }}
-          
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pdoc3
-
       - name: Pydoc generation
         run: |
-          pdoc3 --force --html --output-dir docs src
+          pdoc3 --force --html --output-dir docs icmpflood
