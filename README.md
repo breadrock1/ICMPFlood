@@ -15,7 +15,7 @@ and threads amount. So you're welcome! :)
 
 ```shell
 
-usage: python3 launch.py { gui | cmd [options] }
+usage: python3 icmpflood.py { gui | cmd [options] }
                     There are two modes to use this simple application:
                     1. gui  - Allows to run application with GUI interface;
                     2. cmd  - Run application into terminal (print -h for more details).
