@@ -1,7 +1,7 @@
 name: Checker
 
 run-name: ${{ github.actor }} is building action
-on: [ push pull_request ]
+on: pull_request
 
 jobs:
 
