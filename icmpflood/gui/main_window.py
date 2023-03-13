@@ -110,10 +110,10 @@ class MainWindow(QWidget):
         return (
             int(thread_nums) if thread_nums else 1,
             {
-                'address':  address,
-                'port':     int(port) if port else 80,
-                'length':   int(length) if length else 32,
-                'delay':    float(delay) if delay else 0.5
+                'address': address,
+                'port': int(port) if port else 80,
+                'length': int(length) if length else 32,
+                'delay': float(delay) if delay else 0.5
             }
         )
 

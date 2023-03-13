@@ -60,7 +60,7 @@ class FlooderRunner:
                 print('Packets sending duration: {}'.format(datetime.now() - start_time), end='\r')
                 pass
 
-        except KeyboardInterrupt as err:
+        except KeyboardInterrupt:
             warning(msg='\nHas been triggered keyboard interruption!')
             warning(msg='Terminating all running threads...')
 
