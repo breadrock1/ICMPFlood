@@ -49,7 +49,7 @@ class FlooderRunner:
 
     def launch_flooder(self):
         """
-        This method runs with another thread to create ICMP-packet and send it
+        There is main method which runs with another thread to create ICMP-packet and send it
         to specified target ip-address.
         """
 
@@ -57,8 +57,8 @@ class FlooderRunner:
             start_time = datetime.now()
             self._launch_threads()
             while True:
-                print('Packets sending duration: {}'.format(datetime.now() - start_time), end='\r')
-                pass
+                curr_time = datetime.now() - start_time
+                print('Packets sending duration: {}'.format(curr_time), end='\r')
 
         except KeyboardInterrupt:
             warning(msg='\nHas been triggered keyboard interruption!')

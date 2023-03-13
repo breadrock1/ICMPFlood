@@ -44,6 +44,9 @@ class FloodingWorker(QThread):
         self.shutdown_flag = False
 
     def interrupt_worker(self):
+        """
+        This method interrupts current thread object.
+        """
         self.shutdown_flag = True
 
     def run(self):

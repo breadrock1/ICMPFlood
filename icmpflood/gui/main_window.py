@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QLineEdit
 )
 
-from icmpflood.gui.flooding_window import FloodingWorker
+from icmpflood.gui.flooding_worker import FloodingWorker
 
 
 class MainWindow(QWidget):
@@ -19,6 +19,13 @@ class MainWindow(QWidget):
     """
 
     def __init__(self, parent=None):
+        """
+        There is MainWindow class constructor
+
+        Args:
+            parent (QObject): the parent QObject.
+
+        """
         QWidget.__init__(self, parent)
 
         self.all_threads = []
@@ -101,6 +108,10 @@ class MainWindow(QWidget):
         self.statistic_label.setText("Setting up flooding data and press Start!")
 
     def _extract_entered_data(self) -> Tuple[int, Dict[str, Any]]:
+        """
+        This method extracts and formats all QLineEdits data.
+        """
+
         delay = self.delay_line_edit.text()
         address = self.address_line_edit.text()
         port = self.port_line_edit.text()
