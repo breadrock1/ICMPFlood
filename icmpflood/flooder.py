@@ -88,7 +88,7 @@ class Flooder(Thread):
 
         try:
             inet_aton(self.address)
-            while not self.shutdown_flag.is_set():
+            while not self.shutdown_flag:
                 packet = self._construct_packet()
                 sock.sendto(packet, (self.address, self.port_number))
                 sleep(self.sending_delay)

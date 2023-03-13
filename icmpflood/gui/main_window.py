@@ -1,4 +1,5 @@
-from PyQt5.QtCore import QObject
+from typing import Any, Dict, Tuple
+
 from PyQt5.QtWidgets import (
     QLabel,
     QGridLayout,
@@ -7,7 +8,7 @@ from PyQt5.QtWidgets import (
     QLineEdit
 )
 
-from icmpflood.gui.flooding_window import FloodingWindow
+from icmpflood.gui.flooding_window import FloodingWorker
 
 
 class MainWindow(QWidget):
@@ -17,18 +18,15 @@ class MainWindow(QWidget):
     unnecessary data to run flooding.
     """
 
-    parent: QObject
-    """The parent object (default=None)."""
-
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
-        self.all_threads = list()
+        self.all_threads = []
 
-        self.setLayout(self._buildGUI())
+        self.setLayout(self._build_gui())
         self.setGeometry(600, 470, 600, 400)
 
-    def _buildGUI(self) -> QGridLayout:
+    def _build_gui(self) -> QGridLayout:
         """
         This method creates, configures and returns QGridLayout object with
         replaced into GUI elements.
@@ -39,70 +37,100 @@ class MainWindow(QWidget):
 
         self.setWindowTitle('ICMP Packet')
 
-        labelAddress = QLabel('IP-address: ', self)
-        labelPortNum = QLabel('Port number: ', self)
-        labelLength = QLabel('Packet length: ', self)
-        labelFrequency = QLabel('Frequency: ', self)
-        labelThreads = QLabel('Threads: ', self)
+        self.statistic_label = QLabel("Setting up flooding data and press Start!", self)
 
-        self.editAddress = QLineEdit(self)
-        self.exitPortNum = QLineEdit(self)
-        self.editLength = QLineEdit(self)
-        self.editFrequency = QLineEdit(self)
-        self.editThreads = QLineEdit(self)
+        self.address_line_edit = QLineEdit(self)
+        self.port_line_edit = QLineEdit(self)
+        self.length_line_edit = QLineEdit(self)
+        self.delay_line_edit = QLineEdit(self)
+        self.threads_line_edit = QLineEdit(self)
 
-        buttonSend = QPushButton('Send packet', self)
-        buttonSend.clicked.connect(self._sendTo)
+        self.address_line_edit.setPlaceholderText('127.0.0.1')
+        self.port_line_edit.setPlaceholderText('80')
+        self.length_line_edit.setPlaceholderText('32')
+        self.delay_line_edit.setPlaceholderText('0.1')
+        self.threads_line_edit.setPlaceholderText('1')
 
-        buttonClose = QPushButton('Close', self)
-        buttonClose.clicked.connect(self._close)
+        self.send_button = QPushButton('Start flooding', self)
+        self.send_button.clicked.connect(self._send_packets_slot)
 
-        gridLayout = QGridLayout()
-        gridLayout.setSpacing(1)
+        self.close_button = QPushButton('Stop', self)
+        self.close_button.clicked.connect(self._interrupt_threads)
 
-        gridLayout.addWidget(labelAddress, 0, 0)
-        gridLayout.addWidget(labelPortNum, 1, 0)
-        gridLayout.addWidget(labelLength, 2, 0)
-        gridLayout.addWidget(labelFrequency, 3, 0)
-        gridLayout.addWidget(labelThreads, 4, 0)
+        grid_layout = QGridLayout()
+        grid_layout.setSpacing(1)
 
-        gridLayout.addWidget(self.editAddress, 0, 1)
-        gridLayout.addWidget(self.exitPortNum, 1, 1)
-        gridLayout.addWidget(self.editLength, 2, 1)
-        gridLayout.addWidget(self.editFrequency, 3, 1)
-        gridLayout.addWidget(self.editThreads, 4, 1)
+        grid_layout.addWidget(QLabel('IP-address: ', self), 0, 0)
+        grid_layout.addWidget(QLabel('Port number: ', self), 1, 0)
+        grid_layout.addWidget(QLabel('Packet length: ', self), 2, 0)
+        grid_layout.addWidget(QLabel('Frequency: ', self), 3, 0)
+        grid_layout.addWidget(QLabel('Threads: ', self), 4, 0)
 
-        gridLayout.addWidget(buttonSend, 5, 0, 1, 3)
-        gridLayout.addWidget(buttonClose, 6, 2, 1, 1)
+        grid_layout.addWidget(self.address_line_edit, 0, 1)
+        grid_layout.addWidget(self.port_line_edit, 1, 1)
+        grid_layout.addWidget(self.length_line_edit, 2, 1)
+        grid_layout.addWidget(self.delay_line_edit, 3, 1)
+        grid_layout.addWidget(self.threads_line_edit, 4, 1)
 
-        return gridLayout
+        grid_layout.addWidget(self.statistic_label, 5, 0, 1, 3)
+
+        grid_layout.addWidget(self.send_button, 6, 0, 1, 3)
+        grid_layout.addWidget(self.close_button, 7, 2, 1, 1)
+
+        return grid_layout
 
     def _close(self):
         """
         This method just close current QWidget object.
         """
 
+        self._interrupt_threads()
         self.close()
 
-    def _sendTo(self):
+    def _interrupt_threads(self):
+        """
+        This method interrupts all running threads.
+        """
+
+        for thread in self.all_threads:
+            thread.interrupt_worker()
+            thread.terminate()
+
+        self.all_threads.clear()
+        self.send_button.setEnabled(True)
+        self.statistic_label.setText("Setting up flooding data and press Start!")
+
+    def _extract_entered_data(self) -> Tuple[int, Dict[str, Any]]:
+        delay = self.delay_line_edit.text()
+        address = self.address_line_edit.text()
+        port = self.port_line_edit.text()
+        length = self.length_line_edit.text()
+        thread_nums = self.threads_line_edit.text()
+
+        return (
+            int(thread_nums) if thread_nums else 1,
+            {
+                'address':  address,
+                'port':     int(port) if port else 80,
+                'length':   int(length) if length else 32,
+                'delay':    float(delay) if delay else 0.5
+            }
+        )
+
+    def _send_packets_slot(self):
         """
         This method initializes the flooding window to run flooding.
         """
 
-        address = str(self.editAddress.text())
-        port_number = int(self.exitPortNum.text())
-        num_threads = int(self.editThreads.text())
-        packet_length = int(self.editLength.text())
-        frequency = float(self.editFrequency.text())
+        thread_nums, arguments = self._extract_entered_data()
+        for thread_iter in range(0, thread_nums):
+            worker = FloodingWorker(
+                name=f'thread-{thread_iter}',
+                arguments=arguments
+            )
 
-        self.flooding_window = FloodingWindow(
-            args={
-                'ip': address,
-                'port': port_number,
-                'length': packet_length,
-                'frequency': frequency,
-                'threads': num_threads
-            }
-        )
+            worker.start()
+            self.all_threads.append(worker)
 
-        self.flooding_window.show_window()
+        self.send_button.setEnabled(False)
+        self.statistic_label.setText("Flooding has been started!")

